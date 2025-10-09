@@ -1,0 +1,235 @@
+/* MessageBubble.css - Message bubble styles */
+.message-bubble {
+  display: flex;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.message-bubble.user {
+  justify-content: flex-end;
+}
+
+.message-bubble.assistant {
+  justify-content: flex-start;
+}
+
+.message-content {
+  display: flex;
+  gap: 12px;
+  max-width: 80%;
+  position: relative;
+}
+
+.message-bubble.user .message-content {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.user-avatar,
+.assistant-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.assistant-avatar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.message-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-text {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #374151;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  border: 1px solid #e5e7eb;
+}
+
+.message-bubble.user .message-text {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.message-bubble.assistant .message-text {
+  background-color: #f8f9fa;
+  color: #374151;
+}
+
+.message-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.message-bubble.user .message-meta {
+  flex-direction: row-reverse;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.message-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message-bubble.assistant:hover .message-actions {
+  opacity: 1;
+}
+
+.message-actions.visible {
+  opacity: 1;
+}
+
+.message-actions .action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.message-actions .action-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.message-actions .action-button.active {
+  background-color: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Code blocks and formatting */
+.message-text pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message-text code {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+}
+
+.message-bubble.user .message-text code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.message-text blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.message-text ul,
+.message-text ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.message-text li {
+  margin: 4px 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .message-content {
+    max-width: 90%;
+    gap: 8px;
+  }
+  
+  .message-text {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  
+  .user-avatar,
+  .assistant-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .message-actions .action-button {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-content {
+    max-width: 95%;
+    gap: 6px;
+  }
+  
+  .message-text {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 16px;
+  }
+  
+  .user-avatar,
+  .assistant-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  
+  .message-actions {
+    gap: 2px;
+  }
+  
+  .message-actions .action-button {
+    width: 22px;
+    height: 22px;
+  }
+}
