@@ -29,7 +29,9 @@ const MessageBubble = ({ message }) => {
   }
 
   const formatTime = (timestamp) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if (!timestamp) return ''
+    const date = new Date(timestamp)
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
@@ -39,10 +41,10 @@ const MessageBubble = ({ message }) => {
       onMouseLeave={() => setShowActions(false)}
     >
       <div className="message-content">
-        <div className="message-avatar">
+          <div className="message-avatar">
           {message.type === 'user' ? (
             <div className="user-avatar">
-              <span>U</span>
+              <span>{message.user?.name ? message.user.name.charAt(0).toUpperCase() : 'U'}</span>
             </div>
           ) : (
             <div className="assistant-avatar">
@@ -57,7 +59,7 @@ const MessageBubble = ({ message }) => {
           </div>
           
           <div className="message-meta">
-            <span className="message-time">{formatTime(message.timestamp)}</span>
+            <span className="message-time">{formatTime(message.createdAt)}</span>
             
             {message.type === 'assistant' && (
               <div className={`message-actions ${showActions ? 'visible' : ''}`}>

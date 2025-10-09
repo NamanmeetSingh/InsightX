@@ -1,23 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Mic, Square, ThumbsUp, ThumbsDown, Copy, MoreVertical } from 'lucide-react'
+import { Send, Paperclip, Mic, Square } from 'lucide-react'
+import { useChat } from '../contexts/ChatContext'
+import { useAuth } from '../contexts/AuthContext'
 import MessageBubble from '../components/MessageBubble'
 import './Chat.css'
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'assistant',
-      content: 'Hello! I\'m InsightX, your AI assistant. How can I help you today?',
-      timestamp: new Date(),
-      isTyping: false
-    }
-  ])
   const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
+
+  const { 
+    currentChat, 
+    messages, 
+    sendMessage, 
+    loading: chatLoading,
+    error: chatError 
+  } = useChat()
+
+  const { isAuthenticated } = useAuth()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -28,46 +30,15 @@ const Chat = () => {
   }, [messages])
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim() || !currentChat || !isAuthenticated) return
 
-    const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date(),
-      isTyping: false
-    }
-
-    setMessages(prev => [...prev, userMessage])
+    const content = inputValue.trim()
     setInputValue('')
-    setIsTyping(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage = {
-        id: Date.now() + 1,
-        type: 'assistant',
-        content: generateAIResponse(inputValue),
-        timestamp: new Date(),
-        isTyping: false
-      }
-      setMessages(prev => [...prev, assistantMessage])
-      setIsTyping(false)
-    }, 1500)
-  }
-
-  const generateAIResponse = (userInput) => {
-    const responses = [
-      "That's an interesting question! Let me help you with that.",
-      "I understand what you're asking. Here's what I think...",
-      "Great question! Based on my knowledge, here's the answer:",
-      "I'd be happy to help you with that. Let me provide some insights.",
-      "That's a complex topic. Let me break it down for you:",
-      "I can definitely assist you with that. Here's my response:",
-      "Thanks for asking! Here's what I can tell you about that:",
-      "I'll do my best to help you understand this topic better."
-    ]
-    return responses[Math.floor(Math.random() * responses.length)] + " " + userInput
+    const result = await sendMessage(content, currentChat._id)
+    if (!result.success) {
+      console.error('Failed to send message:', result.error)
+    }
   }
 
   const handleKeyPress = (e) => {
@@ -87,14 +58,35 @@ const Chat = () => {
     console.log('File upload clicked')
   }
 
+  // Show welcome message if no chat is selected
+  if (!currentChat) {
+    return (
+      <div className="chat-container">
+        <div className="welcome-screen">
+          <div className="welcome-content">
+            <h2>Welcome to InsightX</h2>
+            <p>Select a chat from the sidebar or create a new one to start chatting with your AI assistant.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="chat-container">
       <div className="chat-messages">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
+        {messages.length === 0 ? (
+          <div className="empty-chat">
+            <h3>Start a conversation</h3>
+            <p>Send a message to begin chatting with InsightX.</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <MessageBubble key={message._id} message={message} />
+          ))
+        )}
         
-        {isTyping && (
+        {chatLoading && (
           <div className="typing-indicator">
             <div className="typing-dots">
               <span></span>
@@ -109,12 +101,18 @@ const Chat = () => {
       </div>
 
       <div className="chat-input-container">
+        {!isAuthenticated && (
+          <div className="auth-banner">
+            <p>Please sign in to send messages. Use the profile menu to log in or sign up.</p>
+          </div>
+        )}
         <div className="input-wrapper">
           <div className="input-actions">
             <button 
               className="action-button"
               onClick={handleFileUpload}
               aria-label="Attach file"
+              disabled={!isAuthenticated}
             >
               <Paperclip size={20} />
             </button>
@@ -126,14 +124,15 @@ const Chat = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Message InsightX..."
+              placeholder={isAuthenticated ? "Message InsightX..." : "Sign in to start messaging"}
               className="message-input"
               rows="1"
+              disabled={!isAuthenticated}
             />
           </div>
           
           <div className="input-actions">
-            {inputValue.trim() ? (
+            {inputValue.trim() && isAuthenticated ? (
               <button 
                 className="send-button"
                 onClick={handleSendMessage}
@@ -146,6 +145,7 @@ const Chat = () => {
                 className={`voice-button ${isRecording ? 'recording' : ''}`}
                 onClick={handleVoiceRecording}
                 aria-label="Voice recording"
+                disabled={!isAuthenticated}
               >
                 {isRecording ? <Square size={20} /> : <Mic size={20} />}
               </button>
