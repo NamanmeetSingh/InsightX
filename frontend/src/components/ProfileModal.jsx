@@ -1,14 +1,15 @@
 import React, { useState } from 'react'
 import { X, Settings, Moon, LogOut, Bell, Shield, LogIn, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import AuthForm from './AuthForm'
 import './ProfileModal.css'
 
 const ProfileModal = ({ onClose }) => {
-  const [darkMode, setDarkMode] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [showAuth, setShowAuth] = useState(false)
   const { isAuthenticated, user, logout } = useAuth()
+  const { isDarkMode, toggleTheme } = useTheme()
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -67,8 +68,8 @@ const ProfileModal = ({ onClose }) => {
               <label className="toggle-switch">
                 <input 
                   type="checkbox" 
-                  checked={darkMode}
-                  onChange={(e) => setDarkMode(e.target.checked)}
+                  checked={isDarkMode}
+                  onChange={toggleTheme}
                 />
                 <span className="slider"></span>
               </label>

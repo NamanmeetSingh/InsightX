@@ -4,9 +4,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   z-index: 10;
   position: relative;
 }
@@ -31,21 +31,21 @@
   height: 40px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-secondary);
   transition: all 0.2s ease;
 }
 
 .menu-button:hover {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
 }
 
 .app-title {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
 }
 
