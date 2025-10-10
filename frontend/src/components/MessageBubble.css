@@ -78,6 +78,52 @@
   color: #374151;
 }
 
+/* Attachment Styles */
+.message-attachments {
+  margin-top: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.message-bubble.user .attachment-item {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.message-bubble.assistant .attachment-item {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.attachment-icon {
+  font-size: 16px;
+}
+
+.attachment-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.attachment-size {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
 .message-meta {
   display: flex;
   align-items: center;

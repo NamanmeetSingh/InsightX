@@ -6,6 +6,8 @@ const {
   getAvailableProviders,
   validateApiKey 
 } = require('../services/multiLlmService');
+const { processPdfFile, cleanupFile } = require('../services/pdfService');
+const path = require('path');
 
 // @desc    Get messages for a chat
 // @route   GET /api/messages/chat/:chatId
@@ -152,6 +154,156 @@ const sendMessage = async (req, res) => {
       });
     }
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Send message with file attachment
+// @route   POST /api/messages/with-file
+// @access  Private
+const sendMessageWithFile = async (req, res) => {
+  try {
+    const { content, chatId } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    // Verify chat belongs to user
+    const chat = await Chat.findOne({
+      _id: chatId,
+      user: req.user._id
+    });
+
+    if (!chat) {
+      // Clean up uploaded file if chat not found
+      cleanupFile(file.path);
+      return res.status(404).json({
+        success: false,
+        message: 'Chat not found'
+      });
+    }
+
+    // Process PDF file
+    const pdfResult = await processPdfFile(file.path);
+    
+    if (!pdfResult.success) {
+      // Clean up file on processing failure
+      cleanupFile(file.path);
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to process PDF file',
+        error: pdfResult.error
+      });
+    }
+
+    // Create attachment object
+    const attachment = {
+      type: 'document',
+      url: path.relative(path.join(__dirname, '../'), file.path), // Store relative path
+      filename: file.originalname,
+      size: file.size,
+      mimeType: file.mimetype
+    };
+
+    // Combine user message with PDF content for AI processing
+    let messageContent = content || 'Please analyze the attached PDF document.';
+    const enhancedContent = `${messageContent}\n\n[PDF Content]:\n${pdfResult.text}`;
+
+    // Create user message with attachment
+    const userMessage = await Message.create({
+      content: messageContent,
+      chat: chatId,
+      user: req.user._id,
+      type: 'user',
+      attachments: [attachment]
+    });
+
+    // Add message to chat
+    await chat.addMessage(userMessage._id);
+    await chat.updateLastMessage(userMessage._id);
+
+    // Emit message to socket
+    const io = req.app.get('io');
+    io.to(`chat_${chatId}`).emit('new_message', {
+      message: userMessage,
+      chatId
+    });
+
+    // Generate AI response using enhanced content (original + PDF text)
+    try {
+      const aiResponse = await generateAIResponse(enhancedContent, chat.settings);
+      
+      const assistantMessage = await Message.create({
+        content: aiResponse.content,
+        chat: chatId,
+        user: req.user._id,
+        type: 'assistant',
+        metadata: {
+          model: aiResponse.model,
+          tokens: aiResponse.tokens,
+          processingTime: aiResponse.processingTime,
+          temperature: chat.settings.temperature,
+          attachmentProcessed: true,
+          pdfMetadata: pdfResult.metadata
+        }
+      });
+
+      // Add AI message to chat
+      await chat.addMessage(assistantMessage._id);
+      await chat.updateLastMessage(assistantMessage._id);
+
+      // Emit AI response to socket
+      io.to(`chat_${chatId}`).emit('new_message', {
+        message: assistantMessage,
+        chatId
+      });
+
+      // Clean up the uploaded file after processing
+      cleanupFile(file.path);
+
+      res.status(201).json({
+        success: true,
+        message: 'Message with file sent successfully',
+        data: {
+          userMessage,
+          assistantMessage,
+          pdfMetadata: pdfResult.metadata
+        }
+      });
+    } catch (aiError) {
+      console.error('AI Response Error:', aiError);
+      
+      // Clean up file even if AI fails
+      cleanupFile(file.path);
+      
+      // Still return user message even if AI fails
+      res.status(201).json({
+        success: true,
+        message: 'Message with file sent successfully',
+        data: {
+          userMessage,
+          assistantMessage: null,
+          aiError: 'Failed to generate AI response',
+          pdfMetadata: pdfResult.metadata
+        }
+      });
+    }
+  } catch (error) {
+    // Clean up file on any error
+    if (req.file) {
+      cleanupFile(req.file.path);
+    }
+    
+    console.error('Error in sendMessageWithFile:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -530,6 +682,7 @@ const getProviders = async (req, res) => {
 module.exports = {
   getMessages,
   sendMessage,
+  sendMessageWithFile,
   sendMultiLLMMessage,
   editMessage,
   deleteMessage,

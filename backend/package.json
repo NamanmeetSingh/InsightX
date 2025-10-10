@@ -8,26 +8,33 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["chatbot", "ai", "gemini", "express", "mongodb"],
+  "keywords": [
+    "chatbot",
+    "ai",
+    "gemini",
+    "express",
+    "mongodb"
+  ],
   "author": "InsightX Team",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "mongoose": "^8.19.1",
-    "nodemon": "^3.1.10",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "socket.io": "^4.7.4",
-    "axios": "^1.6.2",
-    "compression": "^1.7.4",
-    "morgan": "^1.10.0"
+    "nodemon": "^3.1.10",
+    "pdf-parse": "^2.2.6",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
     "jest": "^29.7.0",

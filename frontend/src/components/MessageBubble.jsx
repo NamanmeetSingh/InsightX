@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { ThumbsUp, ThumbsDown, Copy, MoreVertical, Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ThumbsUp, ThumbsDown, Copy, MoreVertical, Check, Volume2, VolumeX } from 'lucide-react'
 import './MessageBubble.css'
 
 const MessageBubble = ({ message }) => {
@@ -7,6 +7,18 @@ const MessageBubble = ({ message }) => {
   const [isDisliked, setIsDisliked] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [showActions, setShowActions] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(false)
+
+  useEffect(() => {
+    // Check if speech synthesis is supported
+    setSpeechSupported('speechSynthesis' in window)
+    
+    return () => {
+      // Cleanup: stop any ongoing speech when component unmounts
+      window.speechSynthesis.cancel()
+    }
+  }, [])
 
   const handleLike = () => {
     setIsLiked(!isLiked)
@@ -26,6 +38,45 @@ const MessageBubble = ({ message }) => {
     } catch (err) {
       console.error('Failed to copy text: ', err)
     }
+  }
+
+  const handleTextToSpeech = () => {
+    if (!speechSupported) {
+      alert('Text-to-speech is not supported in your browser')
+      return
+    }
+
+    if (isSpeaking) {
+      // Stop current speech
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    // Create new utterance
+    const utterance = new SpeechSynthesisUtterance(message.content)
+    
+    // Configure speech settings
+    utterance.rate = 0.9 // Slightly slower for better comprehension
+    utterance.pitch = 1
+    utterance.volume = 1
+    
+    // Set up event listeners
+    utterance.onstart = () => {
+      setIsSpeaking(true)
+    }
+    
+    utterance.onend = () => {
+      setIsSpeaking(false)
+    }
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false)
+      console.error('Speech synthesis error')
+    }
+    
+    // Start speech
+    window.speechSynthesis.speak(utterance)
   }
 
   const formatTime = (timestamp) => {
@@ -58,6 +109,23 @@ const MessageBubble = ({ message }) => {
             {message.content}
           </div>
           
+          {/* Display attachments */}
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="message-attachments">
+              {message.attachments.map((attachment, index) => (
+                <div key={index} className="attachment-item">
+                  <div className="attachment-info">
+                    <span className="attachment-icon">📄</span>
+                    <span className="attachment-name">{attachment.filename}</span>
+                    <span className="attachment-size">
+                      ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <div className="message-meta">
             <span className="message-time">{formatTime(message.createdAt)}</span>
             
@@ -84,6 +152,15 @@ const MessageBubble = ({ message }) => {
                 >
                   {isCopied ? <Check size={16} /> : <Copy size={16} />}
                 </button>
+                {speechSupported && (
+                  <button 
+                    className={`action-button ${isSpeaking ? 'active' : ''}`}
+                    onClick={handleTextToSpeech}
+                    aria-label={isSpeaking ? "Stop reading" : "Read aloud"}
+                  >
+                    {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  </button>
+                )}
                 <button 
                   className="action-button"
                   aria-label="More options"

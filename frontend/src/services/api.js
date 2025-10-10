@@ -80,6 +80,10 @@ export const chatAPI = {
 export const messageAPI = {
   getMessages: (chatId, params = {}) => api.get(`/messages/chat/${chatId}`, { params }),
   sendMessage: (messageData) => api.post('/messages', messageData),
+  sendMessageWithFile: (formData) => api.post('/messages/with-file', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000 // 60 seconds for file processing
+  }),
   sendMultiLLMMessage: (messageData) => api.post('/messages/multi', messageData),
   editMessage: (id, content) => api.put(`/messages/${id}`, { content }),
   deleteMessage: (id) => api.delete(`/messages/${id}`),

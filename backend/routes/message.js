@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   getMessages,
   sendMessage,
+  sendMessageWithFile,
   sendMultiLLMMessage,
   editMessage,
   deleteMessage,
@@ -19,6 +20,7 @@ const {
 } = require('../controllers/providerController');
 
 const { protect } = require('../middlewares/auth');
+const { uploadSingle, handleMulterError } = require('../middlewares/fileUpload');
 const {
   validateMessageCreation,
   validateMessageUpdate,
@@ -35,6 +37,11 @@ router.get('/chat/:chatId', protect, validateObjectId('chatId'), validatePaginat
 // @desc    Send message
 // @access  Private
 router.post('/', protect, validateMessageCreation, sendMessage);
+
+// @route   POST /api/messages/with-file
+// @desc    Send message with file attachment (PDF only)
+// @access  Private
+router.post('/with-file', protect, uploadSingle, handleMulterError, sendMessageWithFile);
 
 // @route   POST /api/messages/multi
 // @desc    Send message with multi-LLM responses
