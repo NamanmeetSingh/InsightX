@@ -10,16 +10,16 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    models: ['gemini-pro', 'gemini-pro-vision', 'gemini-1.5-pro'],
+    models: ['gemini-pro', 'gemini-pro-vision'],
     apiKey: process.env.GEMINI_API_KEY,
     defaultModel: 'gemini-pro'
   },
   openai: {
     name: 'OpenAI GPT',
     baseUrl: 'https://api.openai.com/v1',
-    models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    models: ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k'],
     apiKey: process.env.OPENAI_API_KEY,
-    defaultModel: 'gpt-4'
+    defaultModel: 'gpt-3.5-turbo'
   },
   claude: {
     name: 'Anthropic Claude',
@@ -106,8 +106,9 @@ const generateGeminiResponse = async (userMessage, settings = {}) => {
     ]
   };
 
+  const modelName = mergedSettings.model || config.defaultModel;
   const response = await axios.post(
-    `${config.baseUrl}/models/${mergedSettings.model || config.defaultModel}:generateContent?key=${config.apiKey}`,
+    `${config.baseUrl}/models/${modelName}:generateContent?key=${config.apiKey}`,
     payload,
     {
       headers: { 'Content-Type': 'application/json' },

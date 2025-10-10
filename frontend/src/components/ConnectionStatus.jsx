@@ -75,17 +75,6 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      checkProviderStatus();
-    } else {
-      // Set default status when not authenticated
-      setConnectionStatus({});
-      setLoading(false);
-      setError('Please log in to check provider status');
-    }
-  }, [isAuthenticated, checkProviderStatus]);
-
   const checkProviderStatus = useCallback(async () => {
     if (!isAuthenticated) {
       return;
@@ -97,12 +86,13 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
       const response = await messageAPI.getProviderStatus();
       
       // Check if response data exists and has expected structure
-      if (!response || !response.data || !response.data.providers) {
+      if (!response || !response.data || !response.data.data || !response.data.data.providers) {
+        console.error('Invalid response structure. Response:', response);
         throw new Error('Invalid response structure');
       }
       
       const statusData = {};
-      Object.entries(response.data.providers).forEach(([providerId, provider]) => {
+      Object.entries(response.data.data.providers).forEach(([providerId, provider]) => {
         statusData[providerId] = {
           ...provider,
           status: provider.configured ? 'configured' : 'not_configured'
@@ -132,6 +122,17 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      checkProviderStatus();
+    } else {
+      // Set default status when not authenticated
+      setConnectionStatus({});
+      setLoading(false);
+      setError('Please log in to check provider status');
+    }
+  }, [isAuthenticated, checkProviderStatus]);
+
   const testConnections = async () => {
     try {
       setTesting(true);
@@ -148,8 +149,13 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
 
       const response = await messageAPI.testProviderConnections();
       
+      // Check if response has the expected structure
+      if (!response || !response.data || !response.data.data || !response.data.data.results) {
+        throw new Error('Invalid test response structure');
+      }
+      
       const updatedStatus = { ...connectionStatus };
-      Object.entries(response.data.results).forEach(([providerId, result]) => {
+      Object.entries(response.data.data.results).forEach(([providerId, result]) => {
         updatedStatus[providerId] = {
           ...updatedStatus[providerId],
           status: result.status,

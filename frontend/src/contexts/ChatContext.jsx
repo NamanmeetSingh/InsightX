@@ -74,6 +74,11 @@ const chatReducer = (state, action) => {
         ...state,
         error: null,
       };
+    case 'SET_SENDING_MESSAGE':
+      return {
+        ...state,
+        sendingMessage: action.payload,
+      };
     default:
       return state;
   }
@@ -86,6 +91,7 @@ const initialState = {
   messages: [],
   loading: false,
   messagesLoading: false,
+  sendingMessage: false,
   error: null,
 };
 
@@ -185,6 +191,7 @@ export const ChatProvider = ({ children }) => {
 
   // Send message
   const sendMessage = async (content, chatId) => {
+    dispatch({ type: 'SET_SENDING_MESSAGE', payload: true });
     try {
       const response = await messageAPI.sendMessage({
         content,
@@ -215,6 +222,8 @@ export const ChatProvider = ({ children }) => {
       const errorMessage = error.response?.data?.message || 'Failed to send message';
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
       return { success: false, error: errorMessage };
+    } finally {
+      dispatch({ type: 'SET_SENDING_MESSAGE', payload: false });
     }
   };
 

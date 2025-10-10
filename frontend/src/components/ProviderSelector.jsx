@@ -37,24 +37,6 @@ const ProviderSelector = ({ selectedProviders, onSelectionChange, className }) =
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchProviders();
-    } else {
-      // Set fallback providers when not authenticated
-      const fallbackProviders = Object.entries(PROVIDER_INFO).map(([id, info]) => ({
-        id,
-        name: info.name,
-        models: [],
-        defaultModel: 'default',
-        available: false
-      }));
-      setAvailableProviders(fallbackProviders);
-      setLoading(false);
-      setError('Please log in to check provider availability');
-    }
-  }, [isAuthenticated, fetchProviders]);
-
   const fetchProviders = useCallback(async () => {
     if (!isAuthenticated) {
       return;
@@ -65,12 +47,13 @@ const ProviderSelector = ({ selectedProviders, onSelectionChange, className }) =
       const response = await messageAPI.getProviderStatus();
       
       // Check if response data exists and has expected structure
-      if (!response || !response.data || !response.data.providers) {
+      if (!response || !response.data || !response.data.data || !response.data.data.providers) {
+        console.error('ProviderSelector Invalid response structure. Response:', response);
         throw new Error('Invalid response structure');
       }
       
       // Transform the status data to match the expected format
-      const providers = Object.entries(response.data.providers).map(([id, provider]) => ({
+      const providers = Object.entries(response.data.data.providers).map(([id, provider]) => ({
         id,
         name: provider.name,
         models: provider.models || [],
@@ -97,6 +80,24 @@ const ProviderSelector = ({ selectedProviders, onSelectionChange, className }) =
       setLoading(false);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProviders();
+    } else {
+      // Set fallback providers when not authenticated
+      const fallbackProviders = Object.entries(PROVIDER_INFO).map(([id, info]) => ({
+        id,
+        name: info.name,
+        models: [],
+        defaultModel: 'default',
+        available: false
+      }));
+      setAvailableProviders(fallbackProviders);
+      setLoading(false);
+      setError('Please log in to check provider availability');
+    }
+  }, [isAuthenticated, fetchProviders]);
 
   const toggleProvider = (providerId) => {
     const isSelected = selectedProviders.includes(providerId);

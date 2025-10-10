@@ -129,7 +129,7 @@ const generateVisionResponse = async (userMessage, images = [], chatSettings = {
       throw new Error('Gemini API key not configured');
     }
 
-    const settings = { ...DEFAULT_SETTINGS, ...chatSettings, model: 'gemini-pro-vision' };
+    const settings = { ...DEFAULT_SETTINGS, ...chatSettings, model: 'gemini-1.5-pro' };
     const startTime = Date.now();
 
     // Prepare image parts
@@ -221,7 +221,7 @@ const generateVisionResponse = async (userMessage, images = [], chatSettings = {
     // Return a fallback response
     return {
       content: "I apologize, but I'm having trouble processing your request with images right now. Please try again in a moment.",
-      model: settings?.model || 'gemini-pro-vision',
+      model: settings?.model || 'gemini-1.5-pro',
       tokens: { prompt: 0, completion: 0, total: 0 },
       processingTime: Date.now() - startTime,
       temperature: settings?.temperature || 0.7,
@@ -237,23 +237,23 @@ const generateVisionResponse = async (userMessage, images = [], chatSettings = {
 const getAvailableModels = () => {
   return [
     {
-      id: 'gemini-pro',
-      name: 'Gemini Pro',
-      description: 'Best for text-based conversations and general tasks',
-      maxTokens: 4000,
-      supportsVision: false
-    },
-    {
-      id: 'gemini-pro-vision',
-      name: 'Gemini Pro Vision',
-      description: 'Supports both text and image inputs',
-      maxTokens: 4000,
+      id: 'gemini-1.5-flash',
+      name: 'Gemini 1.5 Flash',
+      description: 'Fast and efficient model for most tasks',
+      maxTokens: 8192,
       supportsVision: true
     },
     {
-      id: 'gemini-ultra',
-      name: 'Gemini Ultra',
-      description: 'Most capable model for complex tasks',
+      id: 'gemini-1.5-pro',
+      name: 'Gemini 1.5 Pro',
+      description: 'Advanced model for complex tasks and reasoning',
+      maxTokens: 32768,
+      supportsVision: true
+    },
+    {
+      id: 'gemini-pro',
+      name: 'Gemini Pro (Legacy)',
+      description: 'Legacy model - use 1.5 Flash for better performance',
       maxTokens: 4000,
       supportsVision: false
     }

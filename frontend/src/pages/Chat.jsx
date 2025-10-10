@@ -15,6 +15,7 @@ const Chat = () => {
   const [multiLLMMode, setMultiLLMMode] = useState(false)
   const [selectedProviders, setSelectedProviders] = useState(['gemini', 'openai'])
   const [showProviderSettings, setShowProviderSettings] = useState(false)
+  const [isLocalSending, setIsLocalSending] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -22,7 +23,7 @@ const Chat = () => {
     currentChat, 
     messages, 
     sendMessage, 
-    loading: chatLoading
+    sendingMessage
   } = useChat()
 
   const { isAuthenticated } = useAuth()
@@ -46,13 +47,14 @@ const Chat = () => {
       
       if (multiLLMMode && selectedProviders.length > 0) {
         // Send multi-LLM message
+        setIsLocalSending(true);
         result = await messageAPI.sendMultiLLMMessage({
           content,
           chatId: currentChat._id,
           providers: selectedProviders
         });
       } else {
-        // Send regular single-LLM message
+        // Send regular single-LLM message (this will use ChatContext's sendingMessage state)
         result = await sendMessage(content, currentChat._id);
       }
       
@@ -61,6 +63,10 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      if (multiLLMMode) {
+        setIsLocalSending(false);
+      }
     }
   }
 
@@ -157,7 +163,7 @@ const Chat = () => {
           messages.map((message) => renderMessage(message))
         )}
         
-        {chatLoading && (
+        {(sendingMessage || isLocalSending) && (
           <div className="typing-indicator">
             <div className="typing-dots">
               <span></span>
