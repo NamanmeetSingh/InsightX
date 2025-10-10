@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   getChats,
   getChat,
   createChat,
@@ -12,15 +12,15 @@ const {
   pinChat,
   unpinChat,
   searchChats
-} = require('../controllers/chatController');
+} from '../controllers/chatController.js';
 
-const { protect } = require('../middlewares/auth');
-const {
+import { protect } from '../middlewares/auth.js';
+import {
   validateChatCreation,
   validateChatUpdate,
   validateObjectId,
   validatePagination
-} = require('../middlewares/validation');
+} from '../middlewares/validation.js';
 
 // @route   GET /api/chats
 // @desc    Get all chats for user
@@ -72,4 +72,4 @@ router.put('/:id/pin', protect, validateObjectId('id'), pinChat);
 // @access  Private
 router.put('/:id/unpin', protect, validateObjectId('id'), unpinChat);
 
-module.exports = router;
+export default router;

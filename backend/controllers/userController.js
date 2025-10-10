@@ -1,4 +1,4 @@
-const User = require('../models/User');
+import User from '../models/User.js';
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -167,8 +167,8 @@ const deleteAccount = async (req, res) => {
 // @access  Private
 const getUserStats = async (req, res) => {
   try {
-    const Chat = require('../models/Chat');
-    const Message = require('../models/Message');
+    const { default: Chat } = await import('../models/Chat.js');
+    const { default: Message } = await import('../models/Message.js');
 
     const [chatCount, messageCount] = await Promise.all([
       Chat.countDocuments({ user: req.user._id, isActive: true }),
@@ -194,7 +194,7 @@ const getUserStats = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getProfile,
   updateProfile,
   changePassword,

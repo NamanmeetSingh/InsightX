@@ -1,22 +1,23 @@
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const path = require('path');
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
 
-const {
+const router = express.Router();
+
+import {
   getProfile,
   updateProfile,
   changePassword,
   uploadAvatar,
   deleteAccount,
   getUserStats
-} = require('../controllers/userController');
+} from '../controllers/userController.js';
 
-const { protect } = require('../middlewares/auth');
-const {
+import { protect } from '../middlewares/auth.js';
+import {
   validateUserUpdate,
   validateObjectId
-} = require('../middlewares/validation');
+} from '../middlewares/validation.js';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -75,4 +76,4 @@ router.delete('/account', protect, deleteAccount);
 // @access  Private
 router.get('/stats', protect, getUserStats);
 
-module.exports = router;
+export default router;

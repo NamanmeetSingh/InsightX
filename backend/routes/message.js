@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   getMessages,
   sendMessage,
   sendMessageWithFile,
@@ -12,21 +12,21 @@ const {
   removeReaction,
   getMessageReactions,
   getProviders
-} = require('../controllers/messageController');
+} from '../controllers/messageController.js';
 
-const {
+import {
   testProviderConnections,
   getProviderStatus
-} = require('../controllers/providerController');
+} from '../controllers/providerController.js';
 
-const { protect } = require('../middlewares/auth');
-const { uploadSingle, handleMulterError } = require('../middlewares/fileUpload');
-const {
+import { protect } from '../middlewares/auth.js';
+import { uploadSingle, handleMulterError } from '../middlewares/fileUpload.js';
+import {
   validateMessageCreation,
   validateMessageUpdate,
   validateObjectId,
   validatePagination
-} = require('../middlewares/validation');
+} from '../middlewares/validation.js';
 
 // @route   GET /api/messages/chat/:chatId
 // @desc    Get messages for a chat
@@ -88,4 +88,4 @@ router.delete('/:id/reaction', protect, validateObjectId('id'), removeReaction);
 // @access  Private
 router.get('/:id/reactions', protect, validateObjectId('id'), getMessageReactions);
 
-module.exports = router;
+export default router;

@@ -1,5 +1,5 @@
-const Chat = require('../models/Chat');
-const Message = require('../models/Message');
+import Chat from '../models/Chat.js';
+import Message from '../models/Message.js';
 
 // @desc    Get all chats for user
 // @route   GET /api/chats
@@ -356,7 +356,7 @@ const searchChats = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getChats,
   getChat,
   createChat,

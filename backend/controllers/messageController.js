@@ -1,13 +1,14 @@
-const Message = require('../models/Message');
-const Chat = require('../models/Chat');
-const { generateAIResponse } = require('../services/geminiService');
-const { 
+import Message from '../models/Message.js';
+import Chat from '../models/Chat.js';
+import { generateAIResponse } from '../services/geminiService.js';
+import { 
   generateMultiProviderResponses, 
   getAvailableProviders,
-  validateApiKey 
-} = require('../services/multiLlmService');
-const { processPdfFile, cleanupFile } = require('../services/pdfService');
-const path = require('path');
+  validateApiKey,
+  PROVIDERS
+} from '../services/multiLlmService.js';
+import { processPdfFile, cleanupFile } from '../services/pdfService.js';
+import path from 'path';
 
 // @desc    Get messages for a chat
 // @route   GET /api/messages/chat/:chatId
@@ -653,7 +654,6 @@ const getProviders = async (req, res) => {
     const availableProviders = getAvailableProviders();
     
     const providerDetails = availableProviders.map(provider => {
-      const { PROVIDERS } = require('../services/multiLlmService');
       return {
         id: provider,
         name: PROVIDERS[provider].name,
@@ -679,7 +679,7 @@ const getProviders = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getMessages,
   sendMessage,
   sendMessageWithFile,

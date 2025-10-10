@@ -1,16 +1,18 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+import express from 'express';
+import http from 'http';
+import { Server as socketIo } from 'socket.io';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import dotenv from 'dotenv';
 
-const app = require('./app');
-const connectDB = require('./config/database');
-const { initializeSocket } = require('./config/socket');
+import app from './app.js';
+import connectDB from './config/database.js';
+import { initializeSocket } from './config/socket.js';
+
+dotenv.config();
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -19,7 +21,7 @@ const server = http.createServer(app);
 const corsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Initialize Socket.IO
-const io = socketIo(server, {
+const io = new socketIo(server, {
   cors: {
     origin: corsOrigin,
     methods: ["GET", "POST"]
@@ -72,4 +74,4 @@ process.on('SIGTERM', () => {
   });
 });
 
-module.exports = server;
+export default server;

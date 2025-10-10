@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 // Gemini API configuration
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
@@ -282,7 +282,7 @@ const validateApiKey = async () => {
   }
 };
 
-module.exports = {
+export {
   generateAIResponse,
   generateVisionResponse,
   getAvailableModels,

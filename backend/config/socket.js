@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 const initializeSocket = (io) => {
   // Authentication middleware for socket connections
@@ -79,4 +79,4 @@ const initializeSocket = (io) => {
   return io;
 };
 
-module.exports = { initializeSocket };
+export { initializeSocket };

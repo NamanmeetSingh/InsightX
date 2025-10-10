@@ -1,16 +1,21 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const chatRoutes = require('./routes/chat');
-const messageRoutes = require('./routes/message');
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
+import chatRoutes from './routes/chat.js';
+import messageRoutes from './routes/message.js';
 
 // Import middleware
-const errorHandler = require('./middlewares/errorHandler');
-const notFound = require('./middlewares/notFound');
+import errorHandler from './middlewares/errorHandler.js';
+import notFound from './middlewares/notFound.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -73,4 +78,4 @@ app.get('/api', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const chatSchema = new mongoose.Schema({
   title: {
@@ -121,4 +121,4 @@ chatSchema.methods.unpin = function() {
 chatSchema.set('toJSON', { virtuals: true });
 chatSchema.set('toObject', { virtuals: true });
 
-module.exports = mongoose.model('Chat', chatSchema);
+export default mongoose.model('Chat', chatSchema);

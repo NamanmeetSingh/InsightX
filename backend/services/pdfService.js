@@ -1,6 +1,14 @@
-const pdfParse = require('pdf-parse');
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+
+let pdfParse;
+
+const getPdfParse = async () => {
+  if (!pdfParse) {
+    pdfParse = (await import('pdf-parse')).default;
+  }
+  return pdfParse;
+};
 
 /**
  * Extract text content from PDF file
@@ -16,10 +24,11 @@ const extractPdfText = async (filePath) => {
 
     // Read the PDF file
     const dataBuffer = fs.readFileSync(filePath);
-    
-    // Parse PDF and extract text
-    const data = await pdfParse(dataBuffer);
-    
+
+    // Dynamically import pdf-parse and extract text
+    const pdfParseInstance = await getPdfParse();
+    const data = await pdfParseInstance(dataBuffer);
+
     return {
       success: true,
       text: data.text,
@@ -46,15 +55,10 @@ const extractPdfText = async (filePath) => {
  */
 const cleanPdfText = (text) => {
   if (!text) return '';
-  
   return text
-    // Remove excessive whitespace
     .replace(/\s+/g, ' ')
-    // Remove page breaks and form feeds
     .replace(/\f/g, '\n')
-    // Remove multiple consecutive newlines
     .replace(/\n\s*\n\s*\n/g, '\n\n')
-    // Trim whitespace
     .trim();
 };
 
@@ -66,13 +70,10 @@ const cleanPdfText = (text) => {
 const processPdfFile = async (filePath) => {
   try {
     const extractionResult = await extractPdfText(filePath);
-    
     if (!extractionResult.success) {
       return extractionResult;
     }
-    
     const cleanedText = cleanPdfText(extractionResult.text);
-    
     return {
       success: true,
       text: cleanedText,
@@ -105,7 +106,7 @@ const cleanupFile = (filePath) => {
   }
 };
 
-module.exports = {
+export {
   extractPdfText,
   cleanPdfText,
   processPdfFile,

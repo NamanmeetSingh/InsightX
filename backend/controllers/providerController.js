@@ -1,8 +1,8 @@
-const { 
+import { 
   PROVIDERS, 
   validateApiKey, 
   generateResponseFromProvider 
-} = require('../services/multiLlmService');
+} from '../services/multiLlmService.js';
 
 /**
  * Test API connections for all providers
@@ -171,7 +171,7 @@ const getProviderStatus = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   testProviderConnections,
   getProviderStatus
 };

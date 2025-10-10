@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 /**
  * Multi-LLM Service
@@ -403,13 +403,13 @@ const generateMultiProviderResponses = async (providers, userMessage, settings =
   );
 };
 
-module.exports = {
+export {
   PROVIDERS,
   validateApiKey,
   getAvailableProviders,
   generateResponseFromProvider,
-  generateMultiProviderResponses,
-  
-  // Backward compatibility with existing geminiService
-  generateAIResponse: (userMessage, settings) => generateResponseFromProvider('gemini', userMessage, settings)
+  generateMultiProviderResponses
 };
+
+// Backward compatibility with existing geminiService
+export const generateAIResponse = (userMessage, settings) => generateResponseFromProvider('gemini', userMessage, settings);

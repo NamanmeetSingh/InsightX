@@ -1,19 +1,19 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   register,
   login,
   logout,
   getMe,
   refreshToken
-} = require('../controllers/authController');
+} from '../controllers/authController.js';
 
-const { protect } = require('../middlewares/auth');
-const {
+import { protect } from '../middlewares/auth.js';
+import {
   validateUserRegistration,
   validateUserLogin
-} = require('../middlewares/validation');
+} from '../middlewares/validation.js';
 
 // @route   POST /api/auth/register
 // @desc    Register user
@@ -40,4 +40,4 @@ router.get('/me', protect, getMe);
 // @access  Private
 router.post('/refresh', protect, refreshToken);
 
-module.exports = router;
+export default router;
