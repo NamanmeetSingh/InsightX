@@ -1,0 +1,269 @@
+/* ConnectionStatus.css - Connection status component styles */
+
+.connection-status {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.connection-status.compact {
+  padding: 8px 12px;
+  margin: 8px 0;
+  display: inline-block;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.test-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.test-button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.test-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+.status-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-sm);
+  color: #DC2626;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+html.dark .status-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.compact-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-icon {
+  flex-shrink: 0;
+}
+
+.status-icon.connected {
+  color: #10B981;
+}
+
+.status-icon.partial {
+  color: #F59E0B;
+}
+
+.status-icon.disconnected {
+  color: #EF4444;
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.providers-status {
+  display: grid;
+  gap: 12px;
+}
+
+.provider-status-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.provider-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.provider-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.provider-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.provider-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.provider-description {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.error-details, .performance-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.error-details {
+  color: #DC2626;
+}
+
+.performance-info {
+  color: #059669;
+}
+
+.model-info {
+  margin-top: 6px;
+}
+
+.model-label {
+  font-size: 10px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  background-color: var(--border-color);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.status-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.last-updated {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .connection-status {
+    padding: 12px;
+  }
+  
+  .status-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .provider-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .provider-info {
+    gap: 8px;
+  }
+  
+  .provider-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+}

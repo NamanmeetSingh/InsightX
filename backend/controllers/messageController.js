@@ -1,6 +1,11 @@
 const Message = require('../models/Message');
 const Chat = require('../models/Chat');
 const { generateAIResponse } = require('../services/geminiService');
+const { 
+  generateMultiProviderResponses, 
+  getAvailableProviders,
+  validateApiKey 
+} = require('../services/multiLlmService');
 
 // @desc    Get messages for a chat
 // @route   GET /api/messages/chat/:chatId
@@ -348,12 +353,188 @@ const getMessageReactions = async (req, res) => {
   }
 };
 
+// @desc    Send message with multi-LLM responses
+// @route   POST /api/messages/multi
+// @access  Private
+const sendMultiLLMMessage = async (req, res) => {
+  try {
+    const { content, chatId, providers = [] } = req.body;
+    const io = req.app.get('io');
+
+    // Validate chat
+    const chat = await Chat.findOne({
+      _id: chatId,
+      user: req.user._id
+    });
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat not found'
+      });
+    }
+
+    // Create user message
+    const userMessage = await Message.create({
+      content,
+      chat: chatId,
+      user: req.user._id,
+      type: 'user'
+    });
+
+    await chat.addMessage(userMessage._id);
+
+    // Emit user message immediately
+    io.to(`chat_${chatId}`).emit('new_message', {
+      message: userMessage,
+      chatId
+    });
+
+    // Determine which providers to use
+    let targetProviders = providers.length > 0 ? providers : getAvailableProviders();
+    
+    // Filter to only valid providers with API keys
+    targetProviders = targetProviders.filter(provider => validateApiKey(provider));
+
+    if (targetProviders.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid API keys configured for any providers'
+      });
+    }
+
+    // Emit loading state for each provider
+    targetProviders.forEach(provider => {
+      io.to(`chat_${chatId}`).emit('llm_thinking', {
+        provider,
+        chatId,
+        status: 'generating'
+      });
+    });
+
+    try {
+      // Generate responses from all providers in parallel
+      const multiResponses = await generateMultiProviderResponses(
+        targetProviders, 
+        content, 
+        chat.settings
+      );
+
+      // Create assistant message with all provider responses
+      const assistantMessage = await Message.create({
+        content: 'Multi-LLM Response', // Placeholder content
+        chat: chatId,
+        user: req.user._id,
+        type: 'assistant',
+        multiResponses: multiResponses
+      });
+
+      await chat.addMessage(assistantMessage._id);
+      await chat.updateLastMessage(assistantMessage._id);
+
+      // Emit each provider response as it's processed
+      multiResponses.forEach((response, index) => {
+        io.to(`chat_${chatId}`).emit('llm_response', {
+          provider: response.provider,
+          response,
+          chatId,
+          messageId: assistantMessage._id,
+          index
+        });
+      });
+
+      // Emit final message
+      io.to(`chat_${chatId}`).emit('new_message', {
+        message: assistantMessage,
+        chatId,
+        type: 'multi-llm'
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Multi-LLM message sent successfully',
+        data: {
+          userMessage,
+          assistantMessage,
+          responses: multiResponses,
+          providersUsed: targetProviders
+        }
+      });
+
+    } catch (aiError) {
+      console.error('Multi-LLM Response Error:', aiError);
+      
+      // Emit error for all providers
+      targetProviders.forEach(provider => {
+        io.to(`chat_${chatId}`).emit('llm_error', {
+          provider,
+          chatId,
+          error: 'Failed to generate response'
+        });
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Message sent successfully',
+        data: {
+          userMessage,
+          assistantMessage: null,
+          error: 'Failed to generate AI responses'
+        }
+      });
+    }
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get available LLM providers
+// @route   GET /api/messages/providers
+// @access  Private
+const getProviders = async (req, res) => {
+  try {
+    const availableProviders = getAvailableProviders();
+    
+    const providerDetails = availableProviders.map(provider => {
+      const { PROVIDERS } = require('../services/multiLlmService');
+      return {
+        id: provider,
+        name: PROVIDERS[provider].name,
+        models: PROVIDERS[provider].models,
+        defaultModel: PROVIDERS[provider].defaultModel,
+        available: validateApiKey(provider)
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        providers: providerDetails,
+        count: availableProviders.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getMessages,
   sendMessage,
+  sendMultiLLMMessage,
   editMessage,
   deleteMessage,
   addReaction,
   removeReaction,
-  getMessageReactions
+  getMessageReactions,
+  getProviders
 };

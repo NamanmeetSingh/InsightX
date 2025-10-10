@@ -4,12 +4,19 @@ const router = express.Router();
 const {
   getMessages,
   sendMessage,
+  sendMultiLLMMessage,
   editMessage,
   deleteMessage,
   addReaction,
   removeReaction,
-  getMessageReactions
+  getMessageReactions,
+  getProviders
 } = require('../controllers/messageController');
+
+const {
+  testProviderConnections,
+  getProviderStatus
+} = require('../controllers/providerController');
 
 const { protect } = require('../middlewares/auth');
 const {
@@ -28,6 +35,26 @@ router.get('/chat/:chatId', protect, validateObjectId('chatId'), validatePaginat
 // @desc    Send message
 // @access  Private
 router.post('/', protect, validateMessageCreation, sendMessage);
+
+// @route   POST /api/messages/multi
+// @desc    Send message with multi-LLM responses
+// @access  Private
+router.post('/multi', protect, sendMultiLLMMessage);
+
+// @route   GET /api/messages/providers
+// @desc    Get available LLM providers
+// @access  Private
+router.get('/providers', protect, getProviders);
+
+// @route   GET /api/messages/providers/status
+// @desc    Get provider configuration status
+// @access  Private
+router.get('/providers/status', protect, getProviderStatus);
+
+// @route   GET /api/messages/providers/test
+// @desc    Test provider API connections
+// @access  Private
+router.get('/providers/test', protect, testProviderConnections);
 
 // @route   PUT /api/messages/:id
 // @desc    Edit message

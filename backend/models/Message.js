@@ -21,10 +21,55 @@ const messageSchema = new mongoose.Schema({
     enum: ['user', 'assistant', 'system'],
     required: [true, 'Message type is required']
   },
+  // Multi-LLM support: Store responses from multiple providers
+  multiResponses: [{
+    provider: {
+      type: String,
+      enum: ['gemini', 'openai', 'claude', 'perplexity'],
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    model: {
+      type: String,
+      required: true
+    },
+    tokens: {
+      prompt: { type: Number, default: 0 },
+      completion: { type: Number, default: 0 },
+      total: { type: Number, default: 0 }
+    },
+    processingTime: {
+      type: Number,
+      default: 0
+    },
+    success: {
+      type: Boolean,
+      default: true
+    },
+    error: {
+      type: String
+    },
+    errorType: {
+      type: String,
+      enum: ['auth_error', 'rate_limit', 'bad_request', 'service_error', 'api_error', 'timeout', 'promise_error']
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Legacy single response support (for backward compatibility)
   metadata: {
     model: {
       type: String,
       default: 'gemini-pro'
+    },
+    provider: {
+      type: String,
+      default: 'gemini'
     },
     tokens: {
       prompt: {

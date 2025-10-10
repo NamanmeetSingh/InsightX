@@ -80,11 +80,15 @@ export const chatAPI = {
 export const messageAPI = {
   getMessages: (chatId, params = {}) => api.get(`/messages/chat/${chatId}`, { params }),
   sendMessage: (messageData) => api.post('/messages', messageData),
+  sendMultiLLMMessage: (messageData) => api.post('/messages/multi', messageData),
   editMessage: (id, content) => api.put(`/messages/${id}`, { content }),
   deleteMessage: (id) => api.delete(`/messages/${id}`),
   addReaction: (id, reaction) => api.post(`/messages/${id}/reaction`, { reaction }),
   removeReaction: (id) => api.delete(`/messages/${id}/reaction`),
   getReactions: (id) => api.get(`/messages/${id}/reactions`),
+  getProviders: () => api.get('/messages/providers'),
+  getProviderStatus: () => api.get('/messages/providers/status'),
+  testProviderConnections: () => api.get('/messages/providers/test'),
 };
 
 // Health check
