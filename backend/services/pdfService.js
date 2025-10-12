@@ -3,6 +3,6 @@ import path from 'path';
 
 let pdfParse;
 
-const getPdfParse = async () => {
-  if (!pdfParse) {
-    // Deprecated: PDF service replaced by pdfParserService.js
+// const getPdfParse = async () => {
+//   if (!pdfParse) {
+//     // Deprecated: PDF service replaced by pdfParserService.js

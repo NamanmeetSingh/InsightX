@@ -10,6 +10,13 @@ import { messageAPI } from '../services/api'
 import './Chat.css'
 
 const Chat = () => {
+  // Prompt Enhancer Info Banner
+  const PromptEnhancerBanner = () => (
+    <div className="prompt-enhancer-banner">
+      <span role="img" aria-label="magic">✨</span>
+      <strong>Automatic Prompt Enhancer:</strong> Your prompts are intelligently improved for better AI responses!
+    </div>
+  );
   const [inputValue, setInputValue] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [isListening, setIsListening] = useState(false)
@@ -402,6 +409,7 @@ const Chat = () => {
 
   return (
     <div className="chat-container">
+      <PromptEnhancerBanner />
       {/* Provider Settings Panel */}
       {showProviderSettings && (
         <div className="provider-settings-panel">
