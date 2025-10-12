@@ -12,6 +12,8 @@ import './Chat.css'
 const Chat = () => {
   const [inputValue, setInputValue] = useState('')
   const [isRecording, setIsRecording] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(false)
   // Default to all providers; ProviderSelector/ConnectionStatus will treat them as available when configured
   const [selectedProviders, setSelectedProviders] = useState(['gemini', 'openai', 'claude', 'perplexity'])
   const [showProviderSettings, setShowProviderSettings] = useState(false)
@@ -21,6 +23,7 @@ const Chat = () => {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const fileInputRef = useRef(null)
+  const recognitionRef = useRef(null)
 
   const { 
     currentChat, 
@@ -39,6 +42,160 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Initialize speech recognition
+  useEffect(() => {
+    // Check if we're online first
+    const isOnline = navigator.onLine;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognition && isOnline) {
+      try {
+        setSpeechSupported(true);
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        // Add a timeout to prevent hanging
+        let recognitionTimeout;
+
+        recognition.onstart = () => {
+          setIsListening(true);
+          console.log('Speech recognition started');
+          
+          // Set a timeout to prevent hanging
+          recognitionTimeout = setTimeout(() => {
+            if (recognitionRef.current) {
+              try {
+                recognitionRef.current.stop();
+                console.log('Speech recognition timed out');
+              } catch (e) {
+                console.warn('Error stopping recognition on timeout:', e);
+              }
+            }
+          }, 10000); // 10 second timeout
+        };      recognition.onresult = (event) => {
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          }
+        }
+
+        // Update input value with final transcript
+        if (finalTranscript) {
+          setInputValue(prev => {
+            const currentValue = prev.trim();
+            const newTranscript = finalTranscript.trim();
+            
+            // Add space between existing text and new transcript if needed
+            if (currentValue && newTranscript) {
+              return currentValue + ' ' + newTranscript;
+            }
+            return currentValue + newTranscript;
+          });
+        }
+      };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setIsRecording(false);
+          setIsListening(false);
+          
+          // Clear timeout
+          if (recognitionTimeout) {
+            clearTimeout(recognitionTimeout);
+            recognitionTimeout = null;
+          }
+          
+          // Handle different types of errors
+          switch(event.error) {
+            case 'network':
+              console.warn('Speech recognition network error - disabling feature');
+              setSpeechSupported(false);
+              break;
+            case 'service-not-allowed':
+            case 'bad-grammar':
+              console.warn('Speech recognition service error - disabling feature');
+              setSpeechSupported(false);
+              break;
+            case 'not-allowed':
+              alert('Microphone access denied. Please enable microphone permissions.');
+              break;
+            case 'audio-capture':
+              alert('Microphone not available. Please check your microphone.');
+              break;
+            default:
+              console.warn('Speech recognition error:', event.error);
+              setSpeechSupported(false);
+          }
+        };
+        
+        recognition.onend = () => {
+          setIsListening(false);
+          console.log('Speech recognition ended');
+          
+          // Clear timeout
+          if (recognitionTimeout) {
+            clearTimeout(recognitionTimeout);
+            recognitionTimeout = null;
+          }
+        };
+
+        recognitionRef.current = recognition;
+      } catch (error) {
+        console.warn('Error initializing speech recognition:', error);
+        setSpeechSupported(false);
+      }
+    } else {
+      setSpeechSupported(false);
+      console.log('Speech recognition not supported or offline');
+    }
+    
+    // Listen for online/offline events
+    const handleOnline = () => {
+      if (SpeechRecognition && !speechSupported) {
+        console.log('Back online - re-enabling speech recognition');
+        setSpeechSupported(true);
+      }
+    };
+    
+    const handleOffline = () => {
+      console.log('Gone offline - disabling speech recognition');
+      setSpeechSupported(false);
+      if (recognitionRef.current && isRecording) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn('Error stopping recognition on offline:', e);
+        }
+        setIsRecording(false);
+        setIsListening(false);
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      // Clean up recognition
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (error) {
+          console.warn('Error cleaning up speech recognition:', error);
+        }
+      }
+      
+      // Clean up event listeners
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [])
 
   const handleSendMessage = async () => {
     if ((!inputValue.trim() && !selectedFile) || !currentChat || !isAuthenticated) return
@@ -100,9 +257,80 @@ const Chat = () => {
     }
   }
 
-  const handleVoiceRecording = () => {
-    setIsRecording(!isRecording)
-    // Voice recording logic would go here
+  const handleVoiceRecording = async () => {
+    if (!speechSupported) {
+      console.warn('Speech recognition not available');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      return;
+    }
+
+    // Check if we're online
+    if (!navigator.onLine) {
+      console.warn('Speech recognition requires internet connection');
+      return;
+    }
+
+    if (isRecording) {
+      // Stop recording
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+      } catch (error) {
+        console.warn('Error stopping speech recognition:', error);
+      }
+      setIsRecording(false);
+      setIsListening(false);
+    } else {
+      // Start recording
+      try {
+        // Check if microphone is available
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+        
+        if (recognitionRef.current && speechSupported) {
+          try {
+            recognitionRef.current.start();
+            setIsRecording(true);
+          } catch (speechError) {
+            console.warn('Speech recognition start error:', speechError);
+            
+            // If it's an InvalidStateError, the recognition might already be running
+            if (speechError.name === 'InvalidStateError') {
+              console.log('Speech recognition already running, stopping first');
+              try {
+                recognitionRef.current.stop();
+                setTimeout(() => {
+                  try {
+                    recognitionRef.current.start();
+                    setIsRecording(true);
+                  } catch (retryError) {
+                    console.warn('Retry failed:', retryError);
+                    setSpeechSupported(false);
+                  }
+                }, 100);
+              } catch (stopError) {
+                console.warn('Error stopping existing recognition:', stopError);
+                setSpeechSupported(false);
+              }
+            } else {
+              setSpeechSupported(false);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Microphone access error:', error);
+        if (error.name === 'NotAllowedError') {
+          alert('Microphone access denied. Please enable microphone permissions to use voice recording.');
+        }
+        setIsRecording(false);
+        setIsListening(false);
+      }
+    }
   }
 
   const handleFileUpload = () => {
@@ -229,7 +457,7 @@ const Chat = () => {
             <p>Please sign in to send messages. Use the profile menu to log in or sign up.</p>
           </div>
         )}
-        <div className="input-wrapper">
+        <div className={`input-wrapper ${isListening ? 'listening' : ''}`}>
           {/* File Preview */}
           {selectedFile && (
             <div className="file-preview">
@@ -281,7 +509,7 @@ const Chat = () => {
             </button>
 
             {/* Input field */}
-            <div className="input-field" style={{ flex: 1, marginRight: 8 }}>
+            <div className="input-field" style={{ flex: 1, marginRight: 8, position: 'relative' }}>
               <textarea
                 ref={inputRef}
                 value={inputValue}
@@ -289,9 +517,11 @@ const Chat = () => {
                 onKeyPress={handleKeyPress}
                 placeholder={
                   isAuthenticated 
-                    ? ((selectedProviders && selectedProviders.length > 1)
-                        ? `Message ${selectedProviders.length} AI assistants...` 
-                        : "Message InsightX...")
+                    ? (isListening 
+                        ? "Listening... Speak now"
+                        : (selectedProviders && selectedProviders.length > 1)
+                          ? `Message ${selectedProviders.length} AI assistants...` 
+                          : "Message InsightX...")
                     : "Sign in to start messaging"
                 }
                 className="message-input"
@@ -299,6 +529,50 @@ const Chat = () => {
                 disabled={!isAuthenticated ? true : false}
                 style={{ background: 'none', border: 'none', outline: 'none', resize: 'none', fontSize: 16, minHeight: 24 }}
               />
+              {isListening && (
+                <div className="listening-indicator" style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '12px',
+                  color: '#ef4444',
+                  animation: 'pulse 1s infinite'
+                }}>
+                  <div className="recording-dot" style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ef4444',
+                    animation: 'pulse 1s infinite'
+                  }}></div>
+                  Listening
+                </div>
+              )}
+              {isRecording && !isListening && inputValue.trim() && (
+                <button
+                  onClick={() => setInputValue('')}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#6b7280',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    padding: '2px 4px',
+                    borderRadius: '4px'
+                  }}
+                  title="Clear transcribed text"
+                >
+                  Clear
+                </button>
+              )}
             </div>
 
             {/* Send or voice button */}
@@ -313,10 +587,19 @@ const Chat = () => {
               </button>
             ) : (
               <button 
-                className={`voice-button ${isRecording ? 'recording' : ''}`}
+                className={`voice-button ${isRecording ? 'recording' : ''} ${!speechSupported ? 'disabled' : ''}`}
                 onClick={handleVoiceRecording}
-                aria-label="Voice recording"
-                disabled={!isAuthenticated}
+                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                disabled={!isAuthenticated || !speechSupported}
+                title={
+                  !speechSupported 
+                    ? (!navigator.onLine 
+                        ? "Speech recognition requires internet connection"
+                        : "Speech recognition not available")
+                    : isRecording 
+                      ? "Click to stop recording and insert text"
+                      : "Click to start voice recording"
+                }
               >
                 {isRecording ? <Square size={20} /> : <Mic size={20} />}
               </button>

@@ -323,6 +323,47 @@
   }
 }
 
+/* Speech Recognition Styles */
+.voice-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voice-button.disabled:hover {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.listening-indicator {
+  font-weight: 500;
+  user-select: none;
+}
+
+.recording-dot {
+  animation: recordingPulse 1s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* Input placeholder when listening */
+.message-input::placeholder {
+  transition: color 0.3s ease;
+}
+
+.input-wrapper.listening .message-input::placeholder {
+  color: #ef4444;
+  font-style: italic;
+}
+
 .input-footer {
   margin-top: 12px;
   text-align: center;

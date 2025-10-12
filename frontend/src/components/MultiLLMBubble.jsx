@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bot, AlertCircle, Clock, CheckCircle, Copy, RotateCcw, TrendingUp } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import './MultiLLMBubble.css';
 
 const PROVIDER_INFO = {
@@ -87,7 +88,34 @@ const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
         <div className="response-content">
           {response.success ? (
             <>
-              <div className="content-text">{response.content}</div>
+              <div className="content-text">
+                <ReactMarkdown
+                  components={{
+                    // Style code blocks
+                    code: ({inline, children, ...props}) => {
+                      if (inline) {
+                        return <code className="inline-code" {...props}>{children}</code>
+                      }
+                      return <pre className="code-block"><code {...props}>{children}</code></pre>
+                    },
+                    // Style paragraphs
+                    p: ({children}) => <p className="markdown-paragraph">{children}</p>,
+                    // Style lists
+                    ul: ({children}) => <ul className="markdown-list">{children}</ul>,
+                    ol: ({children}) => <ol className="markdown-list ordered">{children}</ol>,
+                    // Style headings
+                    h1: ({children}) => <h1 className="markdown-heading h1">{children}</h1>,
+                    h2: ({children}) => <h2 className="markdown-heading h2">{children}</h2>,
+                    h3: ({children}) => <h3 className="markdown-heading h3">{children}</h3>,
+                    // Style links
+                    a: ({children, href}) => <a href={href} className="markdown-link" target="_blank" rel="noopener noreferrer">{children}</a>,
+                    // Style blockquotes
+                    blockquote: ({children}) => <blockquote className="markdown-blockquote">{children}</blockquote>
+                  }}
+                >
+                  {response.content}
+                </ReactMarkdown>
+              </div>
               <div className="response-actions">
                 <button 
                   className="action-button"

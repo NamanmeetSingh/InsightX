@@ -284,6 +284,127 @@
   }
 }
 
+/* Markdown Styles for Multi-LLM Responses */
+.content-text .markdown-paragraph {
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.content-text .markdown-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.content-text .markdown-heading {
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.content-text .markdown-heading.h1 {
+  font-size: 1.4em;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.content-text .markdown-heading.h2 {
+  font-size: 1.2em;
+  color: #374151;
+}
+
+.content-text .markdown-heading.h3 {
+  font-size: 1.1em;
+  color: #4b5563;
+}
+
+.content-text .markdown-list {
+  margin: 8px 0 12px 16px;
+  padding-left: 0;
+}
+
+.content-text .markdown-list.ordered {
+  list-style-type: decimal;
+}
+
+.content-text .markdown-list:not(.ordered) {
+  list-style-type: disc;
+}
+
+.content-text .markdown-list li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.content-text .inline-code {
+  background-color: #f3f4f6;
+  color: #e11d48;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85em;
+  border: 1px solid #e5e7eb;
+}
+
+.content-text .code-block {
+  background-color: #1f2937;
+  color: #e5e7eb;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  overflow-x: auto;
+  border: 1px solid #374151;
+}
+
+.content-text .code-block code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.content-text .markdown-link {
+  color: #3b82f6;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.content-text .markdown-link:hover {
+  border-bottom-color: #3b82f6;
+}
+
+.content-text .markdown-blockquote {
+  border-left: 4px solid #d1d5db;
+  margin: 10px 0;
+  padding: 6px 0 6px 12px;
+  background-color: #f9fafb;
+  font-style: italic;
+  color: #6b7280;
+}
+
+/* Dark mode support for markdown in multi-LLM */
+html.dark .content-text .inline-code {
+  background-color: #374151;
+  color: #fbbf24;
+  border-color: #4b5563;
+}
+
+html.dark .content-text .code-block {
+  background-color: #111827;
+  border-color: #1f2937;
+}
+
+html.dark .content-text .markdown-blockquote {
+  border-left-color: #4b5563;
+  background-color: #1f2937;
+  color: #9ca3af;
+}
+
+html.dark .content-text .markdown-heading.h1 {
+  border-bottom-color: #374151;
+}
+
 /* Dark mode adjustments */
 html.dark .llm-response-card {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { ThumbsUp, ThumbsDown, Copy, MoreVertical, Check, Volume2, VolumeX } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import './MessageBubble.css'
 
 const MessageBubble = ({ message }) => {
@@ -106,7 +107,36 @@ const MessageBubble = ({ message }) => {
         
         <div className="message-body">
           <div className="message-text">
-            {message.content}
+            {message.type === 'assistant' ? (
+              <ReactMarkdown
+                components={{
+                  // Style code blocks
+                  code: ({inline, children, ...props}) => {
+                    if (inline) {
+                      return <code className="inline-code" {...props}>{children}</code>
+                    }
+                    return <pre className="code-block"><code {...props}>{children}</code></pre>
+                  },
+                  // Style paragraphs
+                  p: ({children}) => <p className="markdown-paragraph">{children}</p>,
+                  // Style lists
+                  ul: ({children}) => <ul className="markdown-list">{children}</ul>,
+                  ol: ({children}) => <ol className="markdown-list ordered">{children}</ol>,
+                  // Style headings
+                  h1: ({children}) => <h1 className="markdown-heading h1">{children}</h1>,
+                  h2: ({children}) => <h2 className="markdown-heading h2">{children}</h2>,
+                  h3: ({children}) => <h3 className="markdown-heading h3">{children}</h3>,
+                  // Style links
+                  a: ({children, href}) => <a href={href} className="markdown-link" target="_blank" rel="noopener noreferrer">{children}</a>,
+                  // Style blockquotes
+                  blockquote: ({children}) => <blockquote className="markdown-blockquote">{children}</blockquote>
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            ) : (
+              message.content
+            )}
           </div>
           
           {/* Display attachments */}
