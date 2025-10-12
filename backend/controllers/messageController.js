@@ -5,8 +5,10 @@ import {
   generateMultiProviderResponses, 
   getAvailableProviders
 } from '../services/multiLlmService.js';
-import { processPdfFile, cleanupFile } from '../services/pdfService.js';
+import { parsePDF } from '../services/pdfParserService.js';
+import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // @desc    Get messages for a chat
 // @route   GET /api/messages/chat/:chatId
@@ -105,7 +107,7 @@ const sendMessage = async (req, res) => {
 
     // Generate AI response
     try {
-      const aiResponse = await generateAIResponse(content, chat.settings);
+      const aiResponse = await generateAIResponse(content, 'gemini-2.5-flash');
       
       const assistantMessage = await Message.create({
         content: aiResponse.content,
@@ -191,33 +193,35 @@ const sendMessageWithFile = async (req, res) => {
       });
     }
 
-    // Process PDF file
-    const pdfResult = await processPdfFile(file.path);
-    
-    if (!pdfResult.success) {
-      // Clean up file on processing failure
-      cleanupFile(file.path);
+    // Parse PDF file and store parsed data for later use
+    let pdfParsed = null;
+    try {
+      pdfParsed = await parsePDF(file.path);
+    } catch (err) {
+      // Clean up file on parsing failure
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
       return res.status(400).json({
         success: false,
-        message: 'Failed to process PDF file',
-        error: pdfResult.error
+        message: 'Failed to parse PDF file',
+        error: err.message
       });
     }
 
-    // Create attachment object
+    // Store attachment and parsed PDF data in message metadata
+  // Fix __dirname for ES modules
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
     const attachment = {
       type: 'document',
-      url: path.relative(path.join(__dirname, '../'), file.path), // Store relative path
+      url: path.relative(path.join(__dirname, '../'), file.path),
       filename: file.originalname,
       size: file.size,
-      mimeType: file.mimetype
+      mimeType: file.mimetype,
+      pdfParsed // Store parsed PDF data for later use
     };
 
-    // Combine user message with PDF content for AI processing
-    let messageContent = content || 'Please analyze the attached PDF document.';
-    const enhancedContent = `${messageContent}\n\n[PDF Content]:\n${pdfResult.text}`;
-
     // Create user message with attachment
+    const messageContent = content || 'Please analyze the attached PDF document.';
     const userMessage = await Message.create({
       content: messageContent,
       chat: chatId,
@@ -237,11 +241,14 @@ const sendMessageWithFile = async (req, res) => {
       chatId
     });
 
-    // Generate AI response using enhanced content (original + PDF text)
+    // Generate AI response using user's prompt and parsed PDF text
+    let assistantMessage = null;
+    let aiError = null;
     try {
-      const aiResponse = await generateAIResponse(enhancedContent, chat.settings);
-      
-      const assistantMessage = await Message.create({
+      // Combine user prompt and PDF text for LLM
+      const aiPrompt = `${messageContent}\n\n[PDF Content]:\n${pdfParsed.text || ''}`;
+      const aiResponse = await generateAIResponse(aiPrompt, 'gemini-2.5-flash');
+      assistantMessage = await Message.create({
         content: aiResponse.content,
         chat: chatId,
         user: req.user._id,
@@ -252,56 +259,37 @@ const sendMessageWithFile = async (req, res) => {
           processingTime: aiResponse.processingTime,
           temperature: chat.settings.temperature,
           attachmentProcessed: true,
-          pdfMetadata: pdfResult.metadata
+          pdfMetadata: pdfParsed.info || null
         }
       });
-
       // Add AI message to chat
       await chat.addMessage(assistantMessage._id);
       await chat.updateLastMessage(assistantMessage._id);
-
       // Emit AI response to socket
       io.to(`chat_${chatId}`).emit('new_message', {
         message: assistantMessage,
         chatId
       });
-
-      // Clean up the uploaded file after processing
-      cleanupFile(file.path);
-
-      res.status(201).json({
-        success: true,
-        message: 'Message with file sent successfully',
-        data: {
-          userMessage,
-          assistantMessage,
-          pdfMetadata: pdfResult.metadata
-        }
-      });
-    } catch (aiError) {
-      console.error('AI Response Error:', aiError);
-      
-      // Clean up file even if AI fails
-      cleanupFile(file.path);
-      
-      // Still return user message even if AI fails
-      res.status(201).json({
-        success: true,
-        message: 'Message with file sent successfully',
-        data: {
-          userMessage,
-          assistantMessage: null,
-          aiError: 'Failed to generate AI response',
-          pdfMetadata: pdfResult.metadata
-        }
-      });
+    } catch (err) {
+      aiError = err.message || 'Failed to generate AI response';
+      console.error('AI Response Error (PDF):', err);
     }
+    // Respond with both user and assistant message (if available)
+    res.status(201).json({
+      success: true,
+      message: 'Message with file uploaded and parsed successfully',
+      data: {
+        userMessage,
+        assistantMessage,
+        aiError,
+        pdfParsed
+      }
+    });
   } catch (error) {
     // Clean up file on any error
-    if (req.file) {
-      cleanupFile(req.file.path);
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
     }
-    
     console.error('Error in sendMessageWithFile:', error);
     res.status(500).json({
       success: false,
