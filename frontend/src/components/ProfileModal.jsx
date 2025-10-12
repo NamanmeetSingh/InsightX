@@ -94,9 +94,9 @@ const ProfileModal = ({ onClose }) => {
             </div>
           </div>
 
-          {isAuthenticated && (
+          {/* {isAuthenticated && (
             <div className="actions-section">
-              <button className="action-button">
+              <button className="action-button w-100">
                 <Shield size={20} />
                 Privacy & Security
               </button>
@@ -109,7 +109,7 @@ const ProfileModal = ({ onClose }) => {
                 Sign Out
               </button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

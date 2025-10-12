@@ -150,10 +150,11 @@
   font-size: 14px;
 }
 
+/* Chat input row: horizontal alignment for controls and input */
 .input-wrapper {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: column;
+  gap: 0;
   max-width: 800px;
   margin: 0 auto;
   padding: 12px 16px;
@@ -220,10 +221,11 @@
   color: #ef4444;
 }
 
+/* Remove input-actions gap, handled inline in JSX */
 .input-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
 }
 
 .action-button {
@@ -425,46 +427,9 @@
   color: var(--text-primary);
 }
 
+/* Remove input-controls block, now handled inline in JSX */
 .input-controls {
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.mode-selector {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  background-color: var(--surface-color);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-}
-
-.mode-button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: none;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mode-button:hover {
-  color: var(--text-primary);
-  background-color: var(--background-color);
-}
-
-.mode-button.active {
-  background-color: var(--primary-color);
-  color: white;
-  box-shadow: var(--shadow-sm);
+  display: none;
 }
 
 .settings-button {
@@ -509,15 +474,6 @@ html.dark .welcome-screen {
 }
 
 @media (max-width: 768px) {
-  .mode-selector {
-    flex-direction: column;
-    gap: 2px;
-  }
-  
-  .mode-button {
-    padding: 10px;
-  }
-  
   .input-controls {
     margin-bottom: 12px;
   }

@@ -28,6 +28,7 @@ const PROVIDER_INFO = {
 const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
   const [copiedProvider, setCopiedProvider] = useState(null);
   const { multiResponses = [] } = message;
+  const columnCount = Math.max(1, multiResponses.length);
   
   const successfulResponses = multiResponses.filter(r => r.success);
   const failedResponses = multiResponses.filter(r => !r.success);
@@ -125,48 +126,7 @@ const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
     );
   };
 
-  const renderLoadingCard = (provider) => {
-    const providerInfo = PROVIDER_INFO[provider] || {
-      name: provider,
-      color: '#6B7280',
-      icon: '🤖'
-    };
-
-    return (
-      <div 
-        key={`loading-${provider}`}
-        className="llm-response-card loading"
-        style={{ '--provider-color': providerInfo.color }}
-      >
-        <div className="response-header">
-          <div className="provider-info">
-            <span className="provider-icon">{providerInfo.icon}</span>
-            <div className="provider-details">
-              <span className="provider-name">{providerInfo.name}</span>
-              <span className="provider-model">Generating...</span>
-            </div>
-          </div>
-          
-          <div className="response-status">
-            <div className="status-loading">
-              <Clock size={16} />
-              <span>Thinking</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="response-content">
-          <div className="loading-animation">
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Note: loading state handled by parent via isLoading if needed
 
   return (
     <div className="multi-llm-bubble">
@@ -186,7 +146,7 @@ const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
         </div>
       </div>
 
-      <div className="responses-grid">
+      <div className="responses-grid" style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}>
         {multiResponses.map((response, index) => renderResponseCard(response, index))}
       </div>
     </div>

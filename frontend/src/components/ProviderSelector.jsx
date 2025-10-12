@@ -57,8 +57,9 @@ const ProviderSelector = ({ selectedProviders, onSelectionChange, className }) =
         id,
         name: provider.name,
         models: provider.models || [],
-        defaultModel: provider.defaultModel || 'default',
-        available: provider.configured || false
+        defaultModel: provider.defaultModel || 'gemini-2.5-flash',
+        // Treat configured as available
+        available: provider.configured !== false
       }));
       
       setAvailableProviders(providers);

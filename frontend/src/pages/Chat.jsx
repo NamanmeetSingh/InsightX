@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Mic, Square, Settings, Zap, X, FileText } from 'lucide-react'
+import { Send, Paperclip, Mic, Square, Settings, X, FileText } from 'lucide-react'
 import { useChat } from '../contexts/ChatContext'
 import { useAuth } from '../contexts/AuthContext'
 import MessageBubble from '../components/MessageBubble'
@@ -12,8 +12,8 @@ import './Chat.css'
 const Chat = () => {
   const [inputValue, setInputValue] = useState('')
   const [isRecording, setIsRecording] = useState(false)
-  const [multiLLMMode, setMultiLLMMode] = useState(false)
-  const [selectedProviders, setSelectedProviders] = useState(['gemini', 'openai'])
+  // Default to all providers; ProviderSelector/ConnectionStatus will treat them as available when configured
+  const [selectedProviders, setSelectedProviders] = useState(['gemini', 'openai', 'claude', 'perplexity'])
   const [showProviderSettings, setShowProviderSettings] = useState(false)
   const [isLocalSending, setIsLocalSending] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -48,6 +48,7 @@ const Chat = () => {
 
     try {
       let result;
+      const isMulti = selectedProviders && selectedProviders.length > 1;
       
       // Handle file upload
       if (selectedFile) {
@@ -61,10 +62,10 @@ const Chat = () => {
         setSelectedFile(null) // Clear file after sending
         
         // Refresh messages to show the uploaded file and AI response
-        if (result.success) {
+        if (result?.data?.success) {
           await loadMessages(currentChat._id)
         }
-      } else if (multiLLMMode && selectedProviders.length > 0) {
+      } else if (isMulti) {
         // Send multi-LLM message
         setIsLocalSending(true);
         result = await messageAPI.sendMultiLLMMessage({
@@ -72,19 +73,21 @@ const Chat = () => {
           chatId: currentChat._id,
           providers: selectedProviders
         });
+        // Refresh messages so the new multi-response message appears
+        if (result?.data?.success) {
+          await loadMessages(currentChat._id)
+        }
       } else {
         // Send regular single-LLM message (this will use ChatContext's sendingMessage state)
         result = await sendMessage(content, currentChat._id);
       }
       
-      if (!result.success) {
-        console.error('Failed to send message:', result.error);
-      }
+      // For axios responses, result.success won't exist; rely on catch for errors
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
       setIsUploading(false)
-      if (multiLLMMode) {
+      if (selectedProviders && selectedProviders.length > 1) {
         setIsLocalSending(false);
       }
     }
@@ -212,7 +215,7 @@ const Chat = () => {
               <span></span>
             </div>
             <span className="typing-text">
-              {multiLLMMode ? 'AI assistants are thinking...' : 'InsightX is typing...'}
+              {selectedProviders && selectedProviders.length > 1 ? 'AI assistants are thinking...' : 'InsightX is typing...'}
             </span>
           </div>
         )}
@@ -227,33 +230,6 @@ const Chat = () => {
           </div>
         )}
         <div className="input-wrapper">
-          <div className="input-controls">
-            <div className="mode-selector">
-              <button
-                className={`mode-button ${!multiLLMMode ? 'active' : ''}`}
-                onClick={() => setMultiLLMMode(false)}
-                title="Single AI Mode"
-              >
-                Single AI
-              </button>
-              <button
-                className={`mode-button ${multiLLMMode ? 'active' : ''}`}
-                onClick={() => setMultiLLMMode(true)}
-                title="Multi AI Mode"
-              >
-                <Zap size={16} />
-                Multi AI ({selectedProviders.length})
-              </button>
-              <button
-                className="settings-button"
-                onClick={() => setShowProviderSettings(!showProviderSettings)}
-                title="Provider Settings"
-              >
-                <Settings size={16} />
-              </button>
-            </div>
-          </div>
-          
           {/* File Preview */}
           {selectedFile && (
             <div className="file-preview">
@@ -271,7 +247,7 @@ const Chat = () => {
               </div>
             </div>
           )}
-          
+
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
@@ -280,38 +256,52 @@ const Chat = () => {
             onChange={handleFileSelect}
             style={{ display: 'none' }}
           />
-          
-          <div className="input-actions">
+
+          {/* Controls and input row */}
+          <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            {/* Settings button */}
+            <button
+              className="settings-button"
+              onClick={() => setShowProviderSettings(!showProviderSettings)}
+              title="Provider Settings"
+              style={{ marginRight: 8 }}
+            >
+              <Settings size={18} />
+            </button>
+
+            {/* Attach button */}
             <button 
               className="action-button"
               onClick={handleFileUpload}
               aria-label="Attach file"
               disabled={!isAuthenticated}
+              style={{ marginRight: 8 }}
             >
               <Paperclip size={20} />
             </button>
-          </div>
-          
-          <div className="input-field">
-            <textarea
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={
-                isAuthenticated 
-                  ? (multiLLMMode 
-                      ? `Message ${selectedProviders.length} AI assistants...` 
-                      : "Message InsightX...")
-                  : "Sign in to start messaging"
-              }
-              className="message-input"
-              rows="1"
-              disabled={!isAuthenticated}
-            />
-          </div>
-          
-          <div className="input-actions">
+
+            {/* Input field */}
+            <div className="input-field" style={{ flex: 1, marginRight: 8 }}>
+              <textarea
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={
+                  isAuthenticated 
+                    ? ((selectedProviders && selectedProviders.length > 1)
+                        ? `Message ${selectedProviders.length} AI assistants...` 
+                        : "Message InsightX...")
+                    : "Sign in to start messaging"
+                }
+                className="message-input"
+                rows="1"
+                disabled={!isAuthenticated ? true : false}
+                style={{ background: 'none', border: 'none', outline: 'none', resize: 'none', fontSize: 16, minHeight: 24 }}
+              />
+            </div>
+
+            {/* Send or voice button */}
             {(inputValue.trim() || selectedFile) && isAuthenticated ? (
               <button 
                 className="send-button"

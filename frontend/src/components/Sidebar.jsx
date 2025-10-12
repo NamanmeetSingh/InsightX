@@ -61,18 +61,10 @@ const Sidebar = ({ isOpen, onToggle }) => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`
   }
 
-  if (!isOpen) {
-    return (
-      <div className="sidebar sidebar-closed">
-        <button className="new-chat-button-mini" onClick={handleNewChat}>
-          <Plus size={20} />
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="sidebar">
+    <>
+    {isOpen && <div className="sidebar-backdrop" onClick={onToggle} />}
+    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
         <button className="new-chat-button" onClick={handleNewChat}>
           <Plus size={16} />
@@ -165,6 +157,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
         </div>
       )}
     </div>
+    </>
   )
 }
 

@@ -1,26 +1,39 @@
-import { GoogleGenAI } from "@google/genai";
+import axios from 'axios';
 
-// The client gets the API key from the environment variable `GEMINI_API_KEY`.
-const ai = new GoogleGenAI({});
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-export async function generateGeminiContent({ contents, model = "gemini-2.5-flash", thinkingBudget }) {
-  const config = thinkingBudget !== undefined
-    ? { thinkingConfig: { thinkingBudget } }
-    : undefined;
+const SYSTEM_PROMPT = 'You are InsightX, a helpful AI assistant. Always use Gemini 2.5 Flash.';
 
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    ...(config && { config })
-  });
-  return response.text;
+export async function generateGeminiContent(userMessage) {
+  const API_KEY = process.env.GEMINI_API_KEY;
+  if (!API_KEY) throw new Error('Gemini API key not configured');
+  const payload = {
+    contents: [
+      {
+        parts: [
+          { text: `${SYSTEM_PROMPT}\n\nUser: ${userMessage}` }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 1000,
+      topP: 0.8,
+      topK: 10
+    },
+    safetySettings: [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+    ]
+  };
+  const response = await axios.post(
+    `${GEMINI_API_URL}/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+    payload,
+    { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
+  );
+  const aiResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!aiResponse) throw new Error('No response generated from Gemini API');
+  return aiResponse.trim();
 }
-
-// Usage example (remove in production):
-// (async () => {
-//   const text = await generateGeminiContent({
-//     contents: "Explain how AI works in a few words",
-//     thinkingBudget: 0 // disables thinking
-//   });
-//   console.log(text);
-// })();

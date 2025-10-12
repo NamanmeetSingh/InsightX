@@ -3,9 +3,7 @@ import Chat from '../models/Chat.js';
 import { generateAIResponse } from '../services/geminiService.js';
 import { 
   generateMultiProviderResponses, 
-  getAvailableProviders,
-  validateApiKey,
-  PROVIDERS
+  getAvailableProviders
 } from '../services/multiLlmService.js';
 import { processPdfFile, cleanupFile } from '../services/pdfService.js';
 import path from 'path';
@@ -544,17 +542,8 @@ const sendMultiLLMMessage = async (req, res) => {
     });
 
     // Determine which providers to use
-    let targetProviders = providers.length > 0 ? providers : getAvailableProviders();
-    
-    // Filter to only valid providers with API keys
-    targetProviders = targetProviders.filter(provider => validateApiKey(provider));
-
-    if (targetProviders.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No valid API keys configured for any providers'
-      });
-    }
+    // Use requested providers if provided, otherwise fall back to available (simulated) providers
+    const targetProviders = providers.length > 0 ? providers : getAvailableProviders();
 
     // Emit loading state for each provider
     targetProviders.forEach(provider => {

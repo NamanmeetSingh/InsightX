@@ -95,7 +95,8 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
       Object.entries(response.data.data.providers).forEach(([providerId, provider]) => {
         statusData[providerId] = {
           ...provider,
-          status: provider.configured ? 'configured' : 'not_configured'
+          // Treat configured providers as connected by default
+          status: provider.configured ? 'connected' : 'not_configured'
         };
       });
       
@@ -210,7 +211,7 @@ const ConnectionStatus = ({ compact = false, showTestButton = true }) => {
   }
 
   if (compact) {
-    const connectedCount = Object.values(connectionStatus).filter(p => p.status === 'connected').length;
+  const connectedCount = Object.values(connectionStatus).filter(p => p.status === 'connected' || p.status === 'configured').length;
     const totalCount = Object.keys(connectionStatus).length;
     
     return (
