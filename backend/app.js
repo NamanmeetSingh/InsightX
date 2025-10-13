@@ -9,6 +9,8 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import chatRoutes from './routes/chat.js';
 import messageRoutes from './routes/message.js';
+import pipelineRoutes from './routes/pipeline.js';
+import judgeRoutes from './routes/judge.js';
 
 // Import middleware
 import errorHandler from './middlewares/errorHandler.js';
@@ -58,6 +60,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/pipeline', pipelineRoutes);
+app.use('/api/judge', judgeRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -68,7 +72,8 @@ app.get('/api', (req, res) => {
       auth: '/api/auth',
       users: '/api/users',
       chats: '/api/chats',
-      messages: '/api/messages'
+      messages: '/api/messages',
+      judge: '/api/judge'
     },
     documentation: 'https://github.com/your-repo/insightx-backend'
   });

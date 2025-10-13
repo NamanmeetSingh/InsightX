@@ -95,6 +95,17 @@ export const messageAPI = {
   testProviderConnections: () => api.get('/messages/providers/test'),
 };
 
+// Judge API
+export const judgeAPI = {
+  judgeResponses: (judgeData) => api.post('/judge', judgeData),
+  getHealth: () => api.get('/judge/health'),
+};
+
+// Pipeline API
+export const pipelineAPI = {
+  run: (data) => api.post('/pipeline', data),
+};
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health'),

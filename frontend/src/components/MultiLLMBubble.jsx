@@ -26,6 +26,9 @@ const PROVIDER_INFO = {
   }
 };
 
+// Fixed display names for models by response index
+const MODEL_DISPLAY_NAMES = ['Gemini 2.5 Flash', 'ChatGPT', 'Claude', 'Perplexity'];
+
 const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
   const [copiedProvider, setCopiedProvider] = useState(null);
   const { multiResponses = [] } = message;
@@ -54,6 +57,7 @@ const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
       color: '#6B7280',
       icon: '🤖'
     };
+    const displayModelName = MODEL_DISPLAY_NAMES[index] || response.model;
 
     return (
       <div 
@@ -66,7 +70,7 @@ const MultiLLMBubble = ({ message, isLoading = false, onRetry }) => {
             <span className="provider-icon">{providerInfo.icon}</span>
             <div className="provider-details">
               <span className="provider-name">{providerInfo.name}</span>
-              <span className="provider-model">{response.model}</span>
+              <span className="provider-model">{displayModelName}</span>
             </div>
           </div>
           

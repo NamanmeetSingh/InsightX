@@ -1,6 +1,7 @@
 import Message from '../models/Message.js';
 import Chat from '../models/Chat.js';
 import { generateAIResponse } from '../services/geminiService.js';
+import { summarizeChatHistory } from '../services/chatHistoryService.js';
 import { 
   generateMultiProviderResponses, 
   getAvailableProviders
@@ -105,9 +106,10 @@ const sendMessage = async (req, res) => {
       chatId
     });
 
-    // Generate AI response
+    // Generate AI response with chat history context
     try {
-      const aiResponse = await generateAIResponse(content, 'gemini-2.5-flash');
+      const historyContext = await summarizeChatHistory(chatId);
+      const aiResponse = await generateAIResponse(`${historyContext}${content}`, 'gemini-2.5-flash');
       
       const assistantMessage = await Message.create({
         content: aiResponse.content,
@@ -241,12 +243,12 @@ const sendMessageWithFile = async (req, res) => {
       chatId
     });
 
-    // Generate AI response using user's prompt and parsed PDF text
+    // Generate AI response using user's prompt, PDF text, and chat history
     let assistantMessage = null;
     let aiError = null;
     try {
-      // Combine user prompt and PDF text for LLM
-      const aiPrompt = `${messageContent}\n\n[PDF Content]:\n${pdfParsed.text || ''}`;
+      const historyContext = await summarizeChatHistory(chatId);
+      const aiPrompt = `${historyContext}${messageContent}\n\n[PDF Content]:\n${pdfParsed.text || ''}`;
       const aiResponse = await generateAIResponse(aiPrompt, 'gemini-2.5-flash');
       assistantMessage = await Message.create({
         content: aiResponse.content,

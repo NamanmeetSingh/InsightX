@@ -247,6 +247,37 @@
   color: #374151;
 }
 
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.judge-button {
+  position: relative;
+}
+
+.judge-button:hover {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.judge-button:disabled:hover {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .input-field {
   flex: 1;
   min-height: 24px;

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Mic, Square, Settings, X, FileText } from 'lucide-react'
+import { Send, Paperclip, Mic, Square, Settings, X, FileText, Scale, GitBranch } from 'lucide-react'
 import { useChat } from '../contexts/ChatContext'
 import { useAuth } from '../contexts/AuthContext'
 import MessageBubble from '../components/MessageBubble'
 import MultiLLMBubble from '../components/MultiLLMBubble'
 import ProviderSelector from '../components/ProviderSelector'
 import ConnectionStatus from '../components/ConnectionStatus'
-import { messageAPI } from '../services/api'
+import JudgeResultsModal from '../components/JudgeResultsModal'
+import { messageAPI, judgeAPI, pipelineAPI } from '../services/api'
 import './Chat.css'
 
 const Chat = () => {
@@ -27,6 +28,12 @@ const Chat = () => {
   const [isLocalSending, setIsLocalSending] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [showPipelineDialog, setShowPipelineDialog] = useState(false)
+  const [isPipelineMode, setIsPipelineMode] = useState(false)
+  const [isPipelineRunning, setIsPipelineRunning] = useState(false)
+  const [showJudgeModal, setShowJudgeModal] = useState(false)
+  const [judgeResults, setJudgeResults] = useState(null)
+  const [isJudging, setIsJudging] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -214,6 +221,27 @@ const Chat = () => {
       let result;
       const isMulti = selectedProviders && selectedProviders.length > 1;
       
+      // Pipeline mode: single-response flow via backend /pipeline
+      if (isPipelineMode) {
+        if (selectedFile) {
+          alert('Pipeline mode does not support file uploads. Please remove the file or disable pipeline mode.');
+          return;
+        }
+        setIsLocalSending(true);
+        setIsPipelineRunning(true);
+        try {
+          result = await pipelineAPI.run({ content, chatId: currentChat._id });
+          if (result?.data?.success) {
+            await loadMessages(currentChat._id);
+          }
+        } finally {
+          setIsLocalSending(false);
+          setIsPipelineRunning(false);
+          setIsPipelineMode(false);
+        }
+        return;
+      }
+      
       // Handle file upload
       if (selectedFile) {
         setIsUploading(true)
@@ -370,6 +398,53 @@ const Chat = () => {
     }
   }
 
+  // Judge functionality - get last MultiLLM responses and send for judgment
+  const handleJudgeResponses = async () => {
+    if (!currentChat || isJudging) return;
+
+    // Find the last MultiLLM message with responses from all 4 providers
+    const lastMultiMessage = [...messages].reverse().find(msg => 
+      msg.multiResponses && 
+      msg.multiResponses.length === 4 && 
+      msg.multiResponses.every(response => response.success && response.content)
+    );
+
+    if (!lastMultiMessage) {
+      alert('No complete responses from all 4 AI models found. Please send a message to all providers first.');
+      return;
+    }
+
+    setIsJudging(true);
+
+    try {
+      // Extract the responses and question
+      const responses = lastMultiMessage.multiResponses.map(response => response.content);
+      const question = lastMultiMessage.content;
+
+      // Call the judge API
+      const result = await judgeAPI.judgeResponses({
+        question,
+        responses
+      });
+
+      if (result.data.success) {
+        setJudgeResults({
+          ...result.data.data,
+          originalMessage: lastMultiMessage
+        });
+        setShowJudgeModal(true);
+      } else {
+        alert('Failed to judge responses: ' + (result.data.error || 'Unknown error'));
+      }
+
+    } catch (error) {
+      console.error('Judge error:', error);
+      alert('Failed to judge responses. Please try again.');
+    } finally {
+      setIsJudging(false);
+    }
+  };
+
   const renderMessage = (message) => {
     // Check if this is a multi-LLM message
     if (message.multiResponses && message.multiResponses.length > 0) {
@@ -466,6 +541,39 @@ const Chat = () => {
           </div>
         )}
         <div className={`input-wrapper ${isListening ? 'listening' : ''}`}>
+          {/* Pipeline instructions dialog */}
+          {showPipelineDialog && (
+            <div style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+            }} onClick={() => setShowPipelineDialog(false)}>
+              <div style={{
+                background: 'var(--background-color, #fff)', color: 'var(--text-primary, #111827)',
+                width: 'min(520px, 92vw)', borderRadius: 12, padding: 16,
+                boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+              }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <h3 style={{ margin: 0, fontSize: 18 }}>Pipeline instructions</h3>
+                  <button onClick={() => setShowPipelineDialog(false)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }}>×</button>
+                </div>
+                <p style={{ marginTop: 0, fontSize: 14, color: 'var(--text-secondary, #4b5563)' }}>Structure your prompt in two numbered lines:</p>
+                <div style={{
+                  background: 'var(--surface-color, #f3f4f6)', padding: 12, borderRadius: 8,
+                  border: '1px solid var(--border-color, #e5e7eb)', fontSize: 13
+                }}>
+                  <div>1. Gemini: Describe the first processing step</div>
+                  <div>2. Perplexity: Describe the final step</div>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted, #6b7280)' }}>
+                  Note: Both steps are executed using the different models. The output of step 1 is fed into step 2.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+                  <button onClick={() => setShowPipelineDialog(false)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-color, #e5e7eb)', background: 'transparent', cursor: 'pointer' }}>Close</button>
+                  <button onClick={() => { setIsPipelineMode(true); setShowPipelineDialog(false); }} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }}>Use for next send</button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* File Preview */}
           {selectedFile && (
             <div className="file-preview">
@@ -514,6 +622,34 @@ const Chat = () => {
               style={{ marginRight: 8 }}
             >
               <Paperclip size={20} />
+            </button>
+
+            {/* Judge button */}
+            <button 
+              className="action-button judge-button"
+              onClick={handleJudgeResponses}
+              aria-label="Judge AI responses"
+              disabled={isJudging}
+              style={{ marginRight: 8 }}
+              title={isJudging ? "Judging responses..." : "Judge the last AI responses from all 4 models"}
+            >
+              {isJudging ? (
+                <div className="loading-spinner" style={{ width: 20, height: 20 }}>⏳</div>
+              ) : (
+                <Scale size={20} />
+              )}
+            </button>
+
+            {/* Pipeline button */}
+            <button
+              className="action-button"
+              onClick={() => setShowPipelineDialog(true)}
+              aria-label="Pipeline mode"
+              disabled={!isAuthenticated || isPipelineRunning}
+              style={{ marginRight: 8 }}
+              title={isPipelineMode ? 'Pipeline enabled for next send' : 'Click to view pipeline instructions'}
+            >
+              <GitBranch size={20} />
             </button>
 
             {/* Input field */}
@@ -621,6 +757,15 @@ const Chat = () => {
           </p>
         </div>
       </div>
+
+      {/* Judge Results Modal */}
+      <JudgeResultsModal
+        isOpen={showJudgeModal}
+        onClose={() => setShowJudgeModal(false)}
+        judgeData={judgeResults}
+        originalResponses={judgeResults?.originalMessage?.multiResponses || []}
+        question={judgeResults?.question || ''}
+      />
     </div>
   )
 }

@@ -1,0 +1,342 @@
+/* Judge Results Modal Styles */
+.judge-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.judge-modal-content {
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #1f2937);
+  border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.judge-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.judge-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #1f2937);
+}
+
+.judge-modal-body {
+  padding: 24px;
+}
+
+.question-section {
+  margin-bottom: 24px;
+}
+
+.question-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.question-text {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0;
+  font-style: italic;
+  color: var(--text-secondary, #4b5563);
+  line-height: 1.5;
+}
+
+.rankings-section {
+  margin-bottom: 24px;
+}
+
+.rankings-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.rankings-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.ranking-card {
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ranking-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--rank-color, #e5e7eb);
+}
+
+.rank-1 {
+  border-color: #fbbf24;
+  --rank-color: #fbbf24;
+  background: linear-gradient(135deg, #fef3c7 0%, #fff 50%);
+}
+
+.rank-2 {
+  border-color: #9ca3af;
+  --rank-color: #9ca3af;
+  background: linear-gradient(135deg, #f3f4f6 0%, #fff 50%);
+}
+
+.rank-3 {
+  border-color: #d97706;
+  --rank-color: #d97706;
+  background: linear-gradient(135deg, #fed7aa 0%, #fff 50%);
+}
+
+.rank-4 {
+  border-color: #6b7280;
+  --rank-color: #6b7280;
+  background: var(--bg-primary, #fff);
+}
+
+.ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ranking-position {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trophy {
+  width: 20px;
+  height: 20px;
+}
+
+.trophy.gold {
+  color: #fbbf24;
+}
+
+.trophy.silver {
+  color: #9ca3af;
+}
+
+.trophy.bronze {
+  color: #d97706;
+}
+
+.star {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+}
+
+.position-number {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary, #1f2937);
+}
+
+.provider-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.provider-icon {
+  font-size: 1.2rem;
+}
+
+.provider-name {
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+}
+
+.score-badge {
+  background: var(--rank-color, #e5e7eb);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.score-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.response-preview {
+  margin-top: 12px;
+}
+
+.response-text {
+  color: var(--text-secondary, #4b5563);
+  line-height: 1.5;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.error-response {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.reasoning-section {
+  margin-bottom: 24px;
+}
+
+.reasoning-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.reasoning-content {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.reasoning-content p {
+  margin: 0;
+  color: var(--text-secondary, #4b5563);
+  line-height: 1.6;
+}
+
+.judge-info {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.judge-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.judge-icon {
+  font-size: 1rem;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .judge-modal-content {
+    --bg-primary: #1f2937;
+    --bg-secondary: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #4b5563;
+  }
+
+  .rank-1 {
+    background: linear-gradient(135deg, #451a03 0%, #1f2937 50%);
+  }
+
+  .rank-2 {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 50%);
+  }
+
+  .rank-3 {
+    background: linear-gradient(135deg, #451a03 0%, #1f2937 50%);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .judge-modal-overlay {
+    padding: 12px;
+  }
+
+  .judge-modal-content {
+    max-height: 95vh;
+  }
+
+  .judge-modal-header,
+  .judge-modal-body {
+    padding: 16px;
+  }
+
+  .ranking-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .provider-info {
+    order: -1;
+    flex-basis: 100%;
+  }
+
+  .score-badge {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+  }
+}
